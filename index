@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Progreso de la carrera (240 ECTS)</title>
+  <style>
+    :root{
+      --bg1:#0b1220;
+      --bg2:#0f1b33;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.09);
+      --border: rgba(255,255,255,.12);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --radius: 18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      min-height:100vh;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(78, 184, 255,.25), transparent 60%),
+        radial-gradient(900px 600px at 85% 25%, rgba(255, 80, 180,.18), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      display:flex;
+      justify-content:center;
+      padding:28px 16px;
+    }
+    .wrap{ width:min(980px, 100%); display:grid; gap:18px; }
+    header{
+      display:flex; gap:14px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;
+    }
+    .title{ display:grid; gap:6px; }
+    h1{ margin:0; font-size: clamp(22px, 3vw, 32px); letter-spacing:.2px; }
+    .subtitle{ margin:0; color: var(--muted); line-height:1.35; max-width: 78ch; }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .top{ padding:16px; display:grid; gap:12px; }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:10px;
+    }
+    .stat{
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding:12px;
+      display:grid;
+      gap:6px;
+    }
+    .stat .k{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+    .stat .v{ font-size:20px; font-weight:900; }
+
+    .progressRow{
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    }
+    .bar{
+      flex:1 1 380px;
+      height:14px;
+      border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      position:relative;
+    }
+    .bar .fill{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background: linear-gradient(90deg, rgba(78,184,255,.95), rgba(123,92,255,.95), rgba(255,80,180,.92));
+      transition: width .35s ease;
+      position:relative;
+    }
+    .bar .fill::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+      transform: translateX(-60%);
+      animation: shine 2.2s infinite;
+      opacity:.55;
+    }
+    @keyframes shine{
+      0%{ transform: translateX(-60%); }
+      100%{ transform: translateX(120%); }
+    }
+
+    .badge{
+      font-weight:900;
+      font-size:14px;
+      padding:8px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.14);
+      white-space: nowrap;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content: space-between;
+      padding:14px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .leftControls{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+    input[type="text"]{
+      width:min(420px, 100%);
+      padding:10px 12px;
+      border-radius:12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      outline:none;
+    }
+    input[type="text"]::placeholder{ color: rgba(255,255,255,.45); }
+
+    button{
+      cursor:pointer;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      font-weight:900;
+      transition: transform .06s ease, background .2s ease;
+    }
+    button:hover{ background: rgba(255,255,255,.14); }
+    button:active{ transform: scale(.98); }
+
+    .accordion{
+      padding: 14px;
+      display:grid;
+      gap: 12px;
+    }
+
+    details{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 14px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .sumLeft{
+      display:flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width:0;
+    }
+    .courseTitle{
+      font-weight:950;
+      font-size: 16px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .courseMeta{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      color: rgba(255,255,255,.80);
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .list{
+      padding: 0 14px 14px 14px;
+      display:grid;
+      gap: 10px;
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap:10px;
+      padding:12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .row .main{ display:flex; align-items:center; gap:12px; min-width:0; }
+    .row label{
+      display:flex; gap:12px; align-items:center; cursor:pointer; min-width:0;
+    }
+    .name{
+      font-weight:900;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 52ch;
+    }
+    .meta{
+      font-size:12px;
+      color: var(--muted);
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+
+    input[type="checkbox"]{
+      width:18px; height:18px;
+      accent-color:#4eb8ff;
+      cursor:pointer;
+    }
+    .tag{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      color: rgba(255,255,255,.80);
+      white-space: nowrap;
+    }
+
+    .done{ opacity:.78; }
+    .done .name{
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: rgba(255,255,255,.35);
+    }
+
+    footer{
+      color: rgba(255,255,255,.55);
+      font-size:12px;
+      text-align:center;
+      padding: 4px 0 0;
+    }
+
+    @media (max-width: 760px){
+      .stats{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .name{ max-width: 32ch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Progreso de la carrera</h1>
+        <p class="subtitle">
+          Objetivo: <b>240 ECTS</b>. Marca las asignaturas aprobadas y verás el progreso.
+          Está organizado por <b>curso y semestre</b> y se guarda automáticamente.
+        </p>
+      </div>
+      <div class="badge" id="pctBadge">0%</div>
+    </header>
+
+    <section class="card top">
+      <div class="stats">
+        <div class="stat">
+          <div class="k">Aprobadas</div>
+          <div class="v" id="stApproved">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Total</div>
+          <div class="v" id="stTotal">40</div>
+        </div>
+        <div class="stat">
+          <div class="k">ECTS aprobados</div>
+          <div class="v" id="stEcts">0</div>
+        </div>
+        <div class="stat">
+          <div class="k">Objetivo</div>
+          <div class="v" id="stGoal">240</div>
+        </div>
+      </div>
+
+      <div class="progressRow">
+        <div class="bar" aria-label="Barra de progreso">
+          <div class="fill" id="progressFill"></div>
+        </div>
+        <div class="badge" id="progressText">0 / 240 ECTS</div>
+      </div>
+
+      <div class="controls">
+        <div class="leftControls">
+          <input id="search" type="text" placeholder="Buscar (ej: Redes, Electrónica, Gestión...)" />
+          <button id="expandAll">Abrir todo</button>
+          <button id="collapseAll">Cerrar todo</button>
+          <button id="markAll">Marcar todas</button>
+          <button id="unmarkAll">Desmarcar todas</button>
+        </div>
+        <button id="reset">Reset (borra guardado)</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="accordion" id="groups"></div>
+    </section>
+
+    <footer>
+      Te falta 1 asignatura para llegar a 40 (240 ECTS). Cuando me la digas, la añado y cuadrará perfecto.
+    </footer>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const ECTS_PER_SUBJECT = 6;
+    const GOAL_ECTS = 240; // objetivo fijo
+
+    // ====== TUS ASIGNATURAS ======
+    // Nota: aquí hay 39; falta 1 para 40.
+    const SUBJECTS = [
+      // 1º S1
+      { id:"1s1-01", name:"Fundamentos de física", ects:6, group:"1º · S1" },
+      { id:"1s1-02", name:"Fundamentos de informática", ects:6, group:"1º · S1" },
+      { id:"1s1-03", name:"Fundamentos de administración de empresas", ects:6, group:"1º · S1" },
+      { id:"1s1-04", name:"Cálculo", ects:6, group:"1º · S1" },
+      { id:"1s1-05", name:"Álgebra", ects:6, group:"1º · S1" },
+
+      // 1º S2
+      { id:"1s2-01", name:"Circuitos y sistemas", ects:6, group:"1º · S2" },
+      { id:"1s2-02", name:"Fundamentos de redes", ects:6, group:"1º · S2" },
+      { id:"1s2-03", name:"Cálculo vectorial y diferencial", ects:6, group:"1º · S2" },
+      { id:"1s2-04", name:"Introducción a los computadores", ects:6, group:"1º · S2" },
+      { id:"1s2-05", name:"Matemáticas para la telecomunicación", ects:6, group:"1º · S2" },
+
+      // 2º S1
+      { id:"2s1-01", name:"Señales y sistemas", ects:6, group:"2º · S1" },
+      { id:"2s1-02", name:"Fundamentos de electrónica", ects:6, group:"2º · S1" },
+      { id:"2s1-03", name:"Probabilidad y procesos", ects:6, group:"2º · S1" },
+      { id:"2s1-04", name:"Electromagnetismo y ondas", ects:6, group:"2º · S1" },
+      { id:"2s1-05", name:"Interconexión de redes", ects:6, group:"2º · S1" },
+
+      // 2º S2
+      { id:"2s2-01", name:"Electrónica analógica", ects:6, group:"2º · S2" },
+      { id:"2s2-02", name:"Procesado digital de señales", ects:6, group:"2º · S2" },
+      { id:"2s2-03", name:"Teoría de comunicación", ects:6, group:"2º · S2" },
+      { id:"2s2-04", name:"Electrónica digital", ects:6, group:"2º · S2" },
+      { id:"2s2-05", name:"Programación de redes y servicios", ects:6, group:"2º · S2" },
+
+      // 3º S1
+      { id:"3s1-01", name:"Comunicaciones digitales", ects:6, group:"3º · S1" },
+      { id:"3s1-02", name:"Sistemas electrónicos con microprocesadores", ects:6, group:"3º · S1" },
+      { id:"3s1-03", name:"Tecnologías de red", ects:6, group:"3º · S1" },
+      { id:"3s1-04", name:"Procesado de audio e imagen", ects:6, group:"3º · S1" },
+      { id:"3s1-05", name:"Medios de transmisión guiada", ects:6, group:"3º · S1" },
+
+      // 3º S2
+      { id:"3s2-01", name:"Gestión de proyectos de telecomunicación", ects:6, group:"3º · S2" },
+      { id:"3s2-02", name:"Electrónica de comunicaciones", ects:6, group:"3º · S2" },
+      { id:"3s2-03", name:"Radiación y propagación", ects:6, group:"3º · S2" },
+      { id:"3s2-04", name:"Análisis y dimensionado de redes", ects:6, group:"3º · S2" },
+      { id:"3s2-05", name:"Producción de audio y vídeo", ects:6, group:"3º · S2" },
+
+      // 4º S1
+      { id:"4s1-01", name:"Redes de comunicaciones móviles", ects:6, group:"4º · S1" },
+      { id:"4s1-02", name:"Gestión de red", ects:6, group:"4º · S1" },
+      { id:"4s1-03", name:"Seguridad en redes y servicios", ects:6, group:"4º · S1" },
+      { id:"4s1-04", name:"Análisis y diseño de software", ects:6, group:"4º · S1" },
+      { id:"4s1-05", name:"Prácticas Externas", ects:6, group:"4º · S1" },
+
+      // 4º S2
+      { id:"4s2-01", name:"Transporte de servicios multimedia", ects:6, group:"4º · S2" },
+      { id:"4s2-02", name:"Diseño y evaluación de redes", ects:6, group:"4º · S2" },
+      { id:"4s2-03", name:"Comercio electrónico", ects:6, group:"4º · S2" },
+      { id:"4s2-04", name:"Trabajo de Final de Grado (TFG)", ects:6, group:"4º · S2" }
+    ];
+
+    // total mostrado (40) es el objetivo real; si SUBJECTS tiene 39, se verá la diferencia
+    const TOTAL_SUBJECTS_TARGET = 40;
+
+    const STORAGE_KEY = "career_progress_teleco_ects_v2";
+
+    // ====== UI ======
+    const groupsEl = document.getElementById("groups");
+    const fillEl = document.getElementById("progressFill");
+    const stApproved = document.getElementById("stApproved");
+    const stTotal = document.getElementById("stTotal");
+    const stEcts = document.getElementById("stEcts");
+    const progressText = document.getElementById("progressText");
+    const pctBadge = document.getElementById("pctBadge");
+    const searchEl = document.getElementById("search");
+
+    const expandAllBtn = document.getElementById("expandAll");
+    const collapseAllBtn = document.getElementById("collapseAll");
+    const markAllBtn = document.getElementById("markAll");
+    const unmarkAllBtn = document.getElementById("unmarkAll");
+    const resetBtn = document.getElementById("reset");
+
+    // ====== STATE ======
+    let state = loadState(); // { [id]: true/false }
+    let filterText = "";
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return {};
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === "object") ? parsed : {};
+      }catch(e){
+        return {};
+      }
+    }
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function isDone(id){ return !!state[id]; }
+
+    function setDone(id, value){
+      state[id] = !!value;
+      saveState();
+      render();
+    }
+
+    function resetAll(){
+      state = {};
+      localStorage.removeItem(STORAGE_KEY);
+      render();
+    }
+
+    function matchesFilter(s){
+      if(!filterText) return true;
+      const t = filterText.toLowerCase().trim();
+      return (s.name + " " + s.group).toLowerCase().includes(t);
+    }
+
+    function compute(){
+      const approved = SUBJECTS.filter(s => isDone(s.id)).length;
+      const ectsApproved = approved * ECTS_PER_SUBJECT;
+      const pct = Math.max(0, Math.min(100, Math.round((ectsApproved / GOAL_ECTS) * 100)));
+      return { approved, ectsApproved, pct };
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function groupBy(list, key){
+      const map = new Map();
+      list.forEach(item => {
+        const k = item[key];
+        if(!map.has(k)) map.set(k, []);
+        map.get(k).push(item);
+      });
+      return map;
+    }
+
+    function groupProgress(fullGroupList){
+      const total = fullGroupList.length;
+      const approved = fullGroupList.filter(s => isDone(s.id)).length;
+      const ectsApproved = approved * ECTS_PER_SUBJECT;
+      const ectsTotal = total * ECTS_PER_SUBJECT;
+      const pct = ectsTotal ? Math.round((ectsApproved/ectsTotal)*100) : 0;
+      return { total, approved, ectsApproved, ectsTotal, pct };
+    }
+
+    function render(){
+      const { approved, ectsApproved, pct } = compute();
+
+      stApproved.textContent = approved;
+      stTotal.textContent = TOTAL_SUBJECTS_TARGET; // objetivo de tu plan
+      stEcts.textContent = ectsApproved;
+      progressText.textContent = `${ectsApproved} / ${GOAL_ECTS} ECTS`;
+      pctBadge.textContent = `${pct}%`;
+      fillEl.style.width = `${pct}%`;
+
+      groupsEl.innerHTML = "";
+
+      const visible = SUBJECTS.filter(matchesFilter);
+
+      // agrupación visible (para render)
+      const groupedVisible = groupBy(visible, "group");
+
+      // orden fijo de grupos
+      const order = ["1º · S1","1º · S2","2º · S1","2º · S2","3º · S1","3º · S2","4º · S1","4º · S2"];
+
+      let renderedAny = false;
+
+      order.forEach(groupName => {
+        const items = groupedVisible.get(groupName) || [];
+        if(items.length === 0) return;
+
+        renderedAny = true;
+
+        // Progreso del grupo completo (no solo lo filtrado)
+        const fullGroupItems = SUBJECTS.filter(s => s.group === groupName);
+        const p = groupProgress(fullGroupItems);
+
+        const details = document.createElement("details");
+        if(filterText) details.open = true;
+
+        const summary = document.createElement("summary");
+        summary.innerHTML = `
+          <div class="sumLeft">
+            <div class="courseTitle">${escapeHtml(groupName)}</div>
+            <div class="courseMeta">${p.approved}/${p.total} aprobadas · ${p.ectsApproved}/${p.ectsTotal} ECTS</div>
+          </div>
+          <div class="pill">${p.pct}%</div>
+        `;
+
+        const list = document.createElement("div");
+        list.className = "list";
+
+        items.forEach(s => {
+          const done = isDone(s.id);
+          const row = document.createElement("div");
+          row.className = "row" + (done ? " done" : "");
+          row.innerHTML = `
+            <div class="main">
+              <label>
+                <input type="checkbox" ${done ? "checked" : ""} data-id="${s.id}">
+                <div>
+                  <span class="name">${escapeHtml(s.name)}</span>
+                  <span class="meta">${ECTS_PER_SUBJECT} ECTS</span>
+                </div>
+              </label>
+            </div>
+            <div class="tag">${done ? "Aprobada ✅" : "Pendiente ⏳"}</div>
+          `;
+          list.appendChild(row);
+        });
+
+        details.appendChild(summary);
+        details.appendChild(list);
+        groupsEl.appendChild(details);
+      });
+
+      // listeners a checkboxes
+      groupsEl.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+        cb.addEventListener("change", (e) => {
+          const id = e.target.getAttribute("data-id");
+          setDone(id, e.target.checked);
+        });
+      });
+
+      if(!renderedAny){
+        const empty = document.createElement("div");
+        empty.className = "accordion";
+        empty.innerHTML = `
+          <div class="row">
+            <div class="main">
+              <div>
+                <div class="name">No hay resultados</div>
+                <div class="meta">Prueba con otra búsqueda</div>
+              </div>
+            </div>
+            <div class="tag">🔎</div>
+          </div>
+        `;
+        groupsEl.appendChild(empty);
+      }
+    }
+
+    // ====== CONTROLES ======
+    searchEl.addEventListener("input", (e) => {
+      filterText = e.target.value || "";
+      render();
+    });
+
+    expandAllBtn.addEventListener("click", () => {
+      document.querySelectorAll("details").forEach(d => d.open = true);
+    });
+
+    collapseAllBtn.addEventListener("click", () => {
+      document.querySelectorAll("details").forEach(d => d.open = false);
+    });
+
+    markAllBtn.addEventListener("click", () => {
+      SUBJECTS.forEach(s => state[s.id] = true);
+      saveState();
+      render();
+    });
+
+    unmarkAllBtn.addEventListener("click", () => {
+      SUBJECTS.forEach(s => state[s.id] = false);
+      saveState();
+      render();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      const ok = confirm("¿Seguro que quieres borrar todo el progreso guardado?");
+      if(ok) resetAll();
+    });
+
+    render();
+  </script>
+</body>
+</html>
